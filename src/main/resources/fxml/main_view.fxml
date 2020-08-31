@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ContextMenu?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import jfxtras.scene.control.LocalTimeTextField?>
+
+<VBox fx:id="rootVBox" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" stylesheets="fxml/styles.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.otus.lessonplan.controllers.MainViewControllerImpl">
+    <children>
+        <MenuBar fx:id="mainMenu" prefHeight="25.0" prefWidth="482.0" VBox.vgrow="NEVER">
+            <menus>
+                <Menu mnemonicParsing="false" text="План">
+                    <items>
+                        <MenuItem fx:id="loadPlanMI" mnemonicParsing="false" onAction="#loadPlanOnAction" text="Загрузить план занятия..." />
+                        <MenuItem fx:id="generateQRCodesMI" disable="true" mnemonicParsing="false" onAction="#generateQRCodesOnAction" text="Сгенерировать QR-коды согласно плану" />
+                    </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="Ход занятия">
+                    <items>
+                        <MenuItem fx:id="loadLastLessonExecutionMI" mnemonicParsing="false" onAction="#loadLastLessonExecutionMIOnAction" text="Загрузить последний ход занятия" />
+                        <MenuItem fx:id="loadLessonExecutionMI" mnemonicParsing="false" onAction="#loadLessonExecutionMIOnAction" text="Загрузить ход занятия..." />
+                        <MenuItem fx:id="loadLessonExecutionFromVideoFileMI" mnemonicParsing="false" onAction="#loadLessonExecutionFromVideoFileMIOnAction" text="Загрузить ход занятия из видео файла..." />
+                        <MenuItem fx:id="saveLessonExecutionMI" disable="true" mnemonicParsing="false" onAction="#saveLessonExecutionMIOnAction" text="Сохранить ход занятия..." />
+                        <MenuItem fx:id="saveLessonExecutionAsSrtMI" disable="true" mnemonicParsing="false" onAction="#saveLessonExecutionAsSrtMIOnAction" text="Сохранить ход занятия как srt..." />
+                        <MenuItem fx:id="saveLessonExecutionForYoutubeMI" disable="true" mnemonicParsing="false" onAction="#saveLessonExecutionForYoutubeMIOnAction" text="Сохранить ход занятия для Youtube..." />
+                    </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="Область захвата">
+                    <items>
+                        <MenuItem fx:id="setCurrentCaptureAreaMI" mnemonicParsing="false" onAction="#setCurrentCaptureAreaMIOnAction" text="Задать область захвата" />
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+        <AnchorPane fx:id="mainPane" maxHeight="-1.0" maxWidth="-1.0" prefHeight="375.0" prefWidth="797.0" VBox.vgrow="ALWAYS">
+            <children>
+                <TableView fx:id="lessonExecutionTV" layoutY="51.0" prefHeight="268.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="51.0">
+                    <columns>
+                        <TableColumn fx:id="stageNameColumn" editable="false" prefWidth="270.0" sortable="false" text="Этап" />
+                        <TableColumn fx:id="bgnTimeColumn" editable="false" maxWidth="79.0" minWidth="0.0" prefWidth="72.0" resizable="false" sortable="false" text="Начало" />
+                        <TableColumn fx:id="timeOffsetColumn" editable="false" maxWidth="70.0" minWidth="0.0" prefWidth="70.0" resizable="false" sortable="false" text="Метка" />
+                    </columns>
+               <contextMenu>
+                  <ContextMenu fx:id="tableViewContextMenu">
+                    <items>
+                      <MenuItem fx:id="deleteSelectedItemsMI" disable="true" mnemonicParsing="false" text="Удалить выделенное" onAction="#deleteSelectedItemsMIOnAction"/>
+                    </items>
+                  </ContextMenu>
+               </contextMenu>
+                </TableView>
+                <Button fx:id="captureBtn" disable="true" layoutX="8.0" layoutY="14.0" mnemonicParsing="false" onAction="#captureBtnOnAction" prefHeight="25.0" prefWidth="133.0" text="Начать захват">
+                    <font>
+                        <Font name="Tahoma" size="12.0" />
+                    </font>
+                </Button>
+                <Button fx:id="recalcBtn" disable="true" layoutX="404.0" layoutY="14.0" mnemonicParsing="false" onAction="#recalcBtnOnAction" prefHeight="25.0" prefWidth="35.0" text="Ʃ">
+                    <font>
+                        <Font name="Tahoma" size="12.0" />
+                    </font>
+                </Button>
+                <Label fx:id="lessonStartTimeLab" disable="true" layoutX="164.0" layoutY="20.0" text="Начало занятия:">
+                    <font>
+                        <Font name="Tahoma" size="12.0" />
+                    </font>
+                </Label>
+                <LocalTimeTextField fx:id="lessonStartTimeLTF" disable="true" layoutX="275.0" layoutY="14.0" prefHeight="25.0" prefWidth="116.0" />
+                <Button fx:id="recalcFromVideoBtn" disable="true" layoutX="446.0" layoutY="14.0" mnemonicParsing="false" onAction="#recalcFromVideoBtnOnAction" prefHeight="25.0" prefWidth="142.0" text="Ʃ (из видеофайла)">
+                    <font>
+                        <Font name="Tahoma" size="12.0" />
+                    </font>
+                </Button>
+            </children>
+        </AnchorPane>
+    </children>
+</VBox>

@@ -1,0 +1,57 @@
+#rootVBox {
+    -fx-background-color: #37474F;
+    -fx-text-fill: WHITE;
+}
+
+#mainPane .label, #progressPane .label {
+    -fx-text-fill: WHITE;
+}
+
+.button {
+    -fx-background-color: #00897B;
+    -fx-text-fill: WHITE;
+}
+
+
+.table-view{
+   -fx-background-color: #37474F;
+}
+
+.table-view .column-header,
+.table-view .column-header .filler,
+.table-view .column-header-background .filler {
+    -fx-background-color: #00897B;
+    -fx-text-fill: WHITESMOKE;
+}
+
+.table-view .table-cell{
+    -fx-text-fill: BLACK;
+}
+
+.table-row-cell{
+    -fx-background-color: -fx-table-cell-border-color, #B0BEC5;
+}
+
+.table-row-cell:odd{
+    -fx-background-color: -fx-table-cell-border-color, #CFD8DC;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: STEELBLUE;
+    -fx-background-insets: 0;
+    -fx-background-radius: 1;
+}
+
+.LocalTimeTextField, .button, .label {
+    -fx-font-family: Tahoma;
+    -fx-font-size: 12px;
+}
+
+
+.LocalTimeTextField .icon  {
+	-fx-image: url("skin/clock.png");
+}
+
+.LocalTimeTextField .icon:disabled  {
+	-fx-image: url("skin/clock-grey.png");
+}
