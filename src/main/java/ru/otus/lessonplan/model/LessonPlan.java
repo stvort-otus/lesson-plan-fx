@@ -48,7 +48,7 @@ public class LessonPlan {
     public void setStageTimeByName(String stageName, LocalTime time) {
         items.stream()
                 .filter(i -> withoutBom(i.getStageName()).equalsIgnoreCase(withoutBom(stageName)))
-                .filter(i -> i.getBgnTime() == null)
+                .filter(i -> i.getBgnTime() == null || i.getBgnTime().isAfter(time))
                 .forEach(i -> i.setBgnTime(time));
     }
 

@@ -48,11 +48,16 @@ public class ProcessVideoFileTask extends Task<Void> {
                         }
                     },
                     (totalFrames, currentFrame, percent) -> {
+/*
                         var canFinish = !addStageIfNotExist && lessonPlanHolder.allStagesHasTime();
                         var progress = canFinish? 100: percent;
                         updateProgress(progress, 100);
                         updateMessage(String.format("%d%%", progress));
                         return canFinish;
+*/
+                        updateProgress(percent, 100);
+                        updateMessage(String.format("%d%%", percent));
+                        return false;
                     }
             );
         } catch (Exception e) {
