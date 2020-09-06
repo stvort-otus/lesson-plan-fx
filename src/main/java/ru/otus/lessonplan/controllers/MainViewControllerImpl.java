@@ -173,9 +173,11 @@ public class MainViewControllerImpl implements MainViewController {
     }
 
     private void refreshLessonPlanTable() {
-        plan.clear();
-        lessonPlanHolder.forEachLessonPlanItem(i -> plan.add(new LessonPlanItemDto(i)));
-        enableControls(plan.size() > 0);
+        synchronized (plan) {
+            plan.clear();
+            lessonPlanHolder.forEachLessonPlanItem(i -> plan.add(new LessonPlanItemDto(i)));
+            enableControls(plan.size() > 0);
+        }
     }
 
     private void enableControls(boolean enabled) {
