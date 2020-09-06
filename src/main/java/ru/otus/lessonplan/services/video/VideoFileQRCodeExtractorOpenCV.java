@@ -130,9 +130,8 @@ public class VideoFileQRCodeExtractorOpenCV implements VideoFileQRCodeExtractor 
             frameGrabber.setFrameNumber(from);
             for (int i = from; i < to; i++) {
 
-                var frame = frameGrabber.grabImage();
-
                 if (i % GRAB_STEP == 0) {
+                    var frame = frameGrabber.grabImage();
                     var image = converter.convert(frame);
                     var qrCodeMessage = qrCodeService.readBarCode(image);
 
@@ -140,6 +139,8 @@ public class VideoFileQRCodeExtractorOpenCV implements VideoFileQRCodeExtractor 
                         var entry = new QRCodeEntry(LocalTime.ofSecondOfDay(frame.timestamp / 1000000), qrCodeMessage);
                         onQRCodeFound.accept(entry);
                     }
+                } else {
+                    frameGrabber.grabFrame(false, true, false, false, false);
                 }
 
                 if (onVideoFileProgress != null) {
