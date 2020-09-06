@@ -12,6 +12,7 @@ import ru.otus.lessonplan.services.video.callbacks.QRCodeFoundCallback;
 import ru.otus.lessonplan.services.video.callbacks.VideoFileProgressCallback;
 
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -81,7 +82,9 @@ public class VideoFileQRCodeExtractorOpenCV implements VideoFileQRCodeExtractor 
             log.error("Error during processing video file", e);
             throw new VideoFileProcessingException(e);
         }
-        log.info("Finished video file processing. Duration: {} ", System.currentTimeMillis() - t);
+        long duration = System.currentTimeMillis() - t;
+        log.info("Finished video file processing. Duration: {} ({}) ", duration,
+                LocalTime.ofSecondOfDay(duration / 1000).format(DateTimeFormatter.ofPattern("HH:mm:ss")));
     }
 
     @Override
@@ -100,7 +103,7 @@ public class VideoFileQRCodeExtractorOpenCV implements VideoFileQRCodeExtractor 
     private void switchGrabber(FFmpegFrameGrabber grabber, boolean doStop) {
         try {
             if (doStop) {
-                grabber.stop();
+                grabber.close();
             } else {
                 grabber.start();
             }

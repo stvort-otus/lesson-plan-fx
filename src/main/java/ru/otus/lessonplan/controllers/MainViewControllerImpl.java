@@ -9,7 +9,8 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.*;
+import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import jfxtras.scene.control.LocalTimeTextField;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -20,7 +21,7 @@ import ru.otus.lessonplan.fx.ExtendedDirectoryChooser;
 import ru.otus.lessonplan.fx.ExtendedFileChooser;
 import ru.otus.lessonplan.model.LessonPlanItemDto;
 import ru.otus.lessonplan.model.ScreenAreaToCapture;
-import ru.otus.lessonplan.services.*;
+import ru.otus.lessonplan.services.BaloonMessageService;
 import ru.otus.lessonplan.services.lessonplan.LessonPlanHolder;
 import ru.otus.lessonplan.services.lessonplan.strategies.SavingFormat;
 import ru.otus.lessonplan.services.screen.CaptureProcessScheduler;
@@ -29,12 +30,14 @@ import ru.otus.lessonplan.services.video.VideoFileQRCodeExtractor;
 import ru.otus.lessonplan.services.video.tasks.ProcessVideoFileTask;
 import ru.otus.lessonplan.utils.FilesUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.nio.charset.UnsupportedCharsetException;
 import java.nio.file.Paths;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 
 import static javafx.concurrent.WorkerStateEvent.WORKER_STATE_SUCCEEDED;
 import static ru.otus.lessonplan.services.lessonplan.LessonPlanHolder.CURRENT_EXECUTION_JSON_FILE;
@@ -392,7 +395,7 @@ public class MainViewControllerImpl implements MainViewController {
     public void loadLessonExecutionFromVideoFile(boolean planExists) {
         var primaryStage = (Stage) rootVBox.getScene().getWindow();
         var lessonStartTime = lessonStartTimeLTF.getLocalTime();
-
+        var exceptions = new ArrayList<Exception>();
         fileChooser.showModal(primaryStage, false, "", MP4_EXT,
                 SELECT_VIDEO_DIALOG_KEY, file -> {
 
@@ -403,15 +406,17 @@ public class MainViewControllerImpl implements MainViewController {
                             .videoFileQRCodeExtractor(videoFileQRCodeExtractor)
                             .lessonPlanHolder(lessonPlanHolder)
                             .addStageIfNotExist(!planExists)
-                            .onException(e -> {
-                                rootVBox.setDisable(false);
-                                executeWarningAlert(WARNING_CAPTION, VIDEO_PROCESSING_ERROR_MSG);
-                            })
+                            .onException(exceptions::add)
                             .onLabelsUpdated(this::refreshLessonPlanTable)
                             .build();
 
                     var progressPane = createProgressPane(processVideoFileTask);
                     processVideoFileTask.addEventHandler(WORKER_STATE_SUCCEEDED, t -> {
+                        if (!exceptions.isEmpty()) {
+                            rootVBox.setDisable(false);
+                            executeWarningAlert(WARNING_CAPTION, VIDEO_PROCESSING_ERROR_MSG);
+                        }
+                        refreshLessonPlanTable();
                         rootVBox.getChildren().remove(progressPane);
                         enableControlPanes(true);
                         saveCurrentLessonExecution();
