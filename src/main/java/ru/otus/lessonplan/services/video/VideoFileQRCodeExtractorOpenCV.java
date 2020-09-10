@@ -13,8 +13,12 @@ import ru.otus.lessonplan.services.video.callbacks.VideoFileProgressCallback;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -51,37 +55,27 @@ public class VideoFileQRCodeExtractorOpenCV implements VideoFileQRCodeExtractor 
         log.info("Start processing video file: {}", fileName);
         var t = System.currentTimeMillis();
 
+        var exceptions = Collections.synchronizedList(new ArrayList<Exception>());
         var latch = new CountDownLatch(degreeOfParallelism);
         try {
             var pool = Executors.newFixedThreadPool(degreeOfParallelism);
 
             HashMap<String, Integer> progressMap = new HashMap<>();
-            VideoFileProgressCallback progressCallback = (totalFrames, currentFrame, percent) -> {
-                synchronized (progressMap) {
-                    log.info("Thread process percent {} = {} ", Thread.currentThread().getName(), percent);
-                    progressMap.put(Thread.currentThread().getName(), percent);
-                    int sum = progressMap.values().stream().mapToInt(Integer::intValue).sum();
-                    if (onVideoFileProgress != null) {
-                        return onVideoFileProgress.apply(totalFrames, currentFrame, sum);
-                    }
-                }
-                return false;
-            };
+            VideoFileProgressCallback progressCallback = prepareVideoFileProgressCallback(progressMap, onVideoFileProgress);
 
-            IntStream.range(1, degreeOfParallelism + 1).forEachOrdered(i -> {
-                pool.submit(() -> processPartOfVideoFile(grabberFactory.createFrameGrabber(fileName),
-                        i, degreeOfParallelism, latch, onQRCodeFound, progressCallback));
+            submitVideoFilePartsProcessing(pool, fileName, onQRCodeFound, progressCallback, latch, exceptions);
+
+            awaitAllAndShutdownThreadPool(pool, latch);
+
+            exceptions.stream().findAny().ifPresent(e -> {
+                throw new VideoFileProcessingException(e);
             });
 
-            latch.await();
-
-            pool.shutdown();
-            pool.awaitTermination(10, TimeUnit.SECONDS);
-            pool.shutdownNow();
         } catch (Exception e) {
             log.error("Error during processing video file", e);
             throw new VideoFileProcessingException(e);
         }
+
         long duration = System.currentTimeMillis() - t;
         log.info("Finished video file processing. Duration: {} ({}) ", duration,
                 LocalTime.ofSecondOfDay(duration / 1000).format(DateTimeFormatter.ofPattern("HH:mm:ss")));
@@ -90,6 +84,36 @@ public class VideoFileQRCodeExtractorOpenCV implements VideoFileQRCodeExtractor 
     @Override
     public void processVideoFile(String fileName, QRCodeFoundCallback onQRCodeFound) {
         processVideoFile(fileName, onQRCodeFound, null);
+    }
+
+    private VideoFileProgressCallback prepareVideoFileProgressCallback(HashMap<String, Integer> progressMap,
+                                                                       VideoFileProgressCallback parentCallback){
+        return (totalFrames, currentFrame, percent) -> {
+            synchronized (progressMap) {
+                log.info("Thread process percent {} = {} ", Thread.currentThread().getName(), percent);
+                progressMap.put(Thread.currentThread().getName(), percent);
+                int sum = progressMap.values().stream().mapToInt(Integer::intValue).sum();
+                if (parentCallback != null) {
+                    return parentCallback.apply(totalFrames, currentFrame, sum);
+                }
+            }
+            return false;
+        };
+    }
+
+    private void submitVideoFilePartsProcessing(ExecutorService pool, String fileName, QRCodeFoundCallback onQRCodeFound,
+                                                VideoFileProgressCallback progressCallback, CountDownLatch latch, List<Exception> exceptions){
+        IntStream.range(1, degreeOfParallelism + 1)
+                .forEachOrdered(i -> pool.submit(() -> processPartOfVideoFile(fileName, i, onQRCodeFound, progressCallback, latch, exceptions)));
+    }
+
+    private void awaitAllAndShutdownThreadPool(ExecutorService pool, CountDownLatch latch) throws InterruptedException {
+        latch.await();
+
+        pool.shutdown();
+        pool.awaitTermination(10, TimeUnit.SECONDS);
+        pool.shutdownNow();
+
     }
 
     private boolean checkQRCodeMessage(String qrCodeMessage) {
@@ -114,23 +138,21 @@ public class VideoFileQRCodeExtractorOpenCV implements VideoFileQRCodeExtractor 
         }
     }
 
-    private void processPartOfVideoFile(FFmpegFrameGrabber frameGrabber,
-                                        int partNum,
-                                        int totalParts,
-                                        CountDownLatch latch,
-                                        QRCodeFoundCallback onQRCodeFound,
-                                        VideoFileProgressCallback onVideoFileProgress) {
+    private void processPartOfVideoFile(String fileName, int partNum, QRCodeFoundCallback onQRCodeFound,
+                                        VideoFileProgressCallback onVideoFileProgress,
+                                        CountDownLatch latch, List<Exception> exceptions) {
 
         var percentLast = -1;
+        var frameGrabber = grabberFactory.createFrameGrabber(fileName);
         var converter = new Java2DFrameConverter();
         switchGrabber(frameGrabber, false);
         try {
             var lengthInFrames = frameGrabber.getLengthInFrames();
-            var partSize = lengthInFrames / totalParts;
+            var partSize = lengthInFrames / degreeOfParallelism;
             var from = (partNum - 1) * partSize;
             var to = from + partSize;
             log.info("Start processing part of video file. Part num: {}/{}, frames in part: {}/{}, frame interval: {}-{}",
-                    partNum, totalParts, partSize, lengthInFrames, from, to);
+                    partNum, degreeOfParallelism, partSize, lengthInFrames, from, to);
 
             frameGrabber.setFrameNumber(from);
             for (int i = from; i < to; i++) {
@@ -165,9 +187,7 @@ public class VideoFileQRCodeExtractorOpenCV implements VideoFileQRCodeExtractor 
 
         } catch (Exception e) {
             log.error("Error during processing video file part", e);
-            latch.countDown();
-            switchGrabber(frameGrabber, true);
-            throw new VideoFileProcessingException(e);
+            exceptions.add(e);
         }
         latch.countDown();
         switchGrabber(frameGrabber, true);

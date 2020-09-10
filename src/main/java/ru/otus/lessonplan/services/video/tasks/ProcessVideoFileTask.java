@@ -46,10 +46,10 @@ public class ProcessVideoFileTask extends Task<Void> {
                             }
 
                             lessonPlanHolder.recalcLabels();
-                        }
 
-                        if (onLabelsUpdated != null) {
-                            onLabelsUpdated.run();
+                            if (onLabelsUpdated != null) {
+                                onLabelsUpdated.run();
+                            }
                         }
                     },
                     (totalFrames, currentFrame, percent) -> {
