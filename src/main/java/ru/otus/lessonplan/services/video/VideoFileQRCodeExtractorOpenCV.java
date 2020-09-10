@@ -101,6 +101,7 @@ public class VideoFileQRCodeExtractorOpenCV implements VideoFileQRCodeExtractor 
     }
 
     private void switchGrabber(FFmpegFrameGrabber grabber, boolean doStop) {
+        log.info("Grabber switched, thread: {}, doStop: {}", Thread.currentThread().getName(), doStop);
         try {
             if (doStop) {
                 grabber.close();
@@ -108,6 +109,7 @@ public class VideoFileQRCodeExtractorOpenCV implements VideoFileQRCodeExtractor 
                 grabber.start();
             }
         } catch (FrameGrabber.Exception e) {
+            log.error("Error during grabber switching", e);
             throw new VideoFileProcessingException(e);
         }
     }
@@ -137,10 +139,13 @@ public class VideoFileQRCodeExtractorOpenCV implements VideoFileQRCodeExtractor 
                     var frame = frameGrabber.grabImage();
                     var image = converter.convert(frame);
                     var qrCodeMessage = qrCodeService.readBarCode(image);
+                    log.debug("Processing frame. Thread: {}, frame: {}, frames: {}/{}", Thread.currentThread().getName(), i, i - from, to - from);
 
                     if (checkQRCodeMessage(qrCodeMessage) && onQRCodeFound != null) {
                         var entry = new QRCodeEntry(LocalTime.ofSecondOfDay(frame.timestamp / 1000000), qrCodeMessage);
+                        log.debug("QR-code founded, entry: {}", entry);
                         onQRCodeFound.accept(entry);
+                        log.debug("Entry processed");
                     }
                 } else {
                     frameGrabber.grabFrame(false, true, false, false, false);
@@ -159,6 +164,7 @@ public class VideoFileQRCodeExtractorOpenCV implements VideoFileQRCodeExtractor 
             }
 
         } catch (Exception e) {
+            log.error("Error during processing video file part", e);
             latch.countDown();
             switchGrabber(frameGrabber, true);
             throw new VideoFileProcessingException(e);

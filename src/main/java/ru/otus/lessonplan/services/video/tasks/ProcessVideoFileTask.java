@@ -2,6 +2,7 @@ package ru.otus.lessonplan.services.video.tasks;
 
 import javafx.concurrent.Task;
 import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 import ru.otus.lessonplan.services.lessonplan.LessonPlanHolder;
 import ru.otus.lessonplan.services.video.VideoFileQRCodeExtractor;
 
@@ -10,6 +11,7 @@ import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.function.Consumer;
 
+@Slf4j
 @Builder
 public class ProcessVideoFileTask extends Task<Void> {
 
@@ -27,40 +29,37 @@ public class ProcessVideoFileTask extends Task<Void> {
 
     @Override
     protected Void call() throws Exception {
+        log.info("Start processing video file: {}", videoFile.getAbsolutePath());
         try {
             videoFileQRCodeExtractor.processVideoFile(videoFile.getAbsolutePath(), entry -> {
 
                         var time = lessonTime.plus(entry.getTime().toSecondOfDay(), ChronoUnit.SECONDS);
+                        synchronized (lessonPlanHolder) {
+                            if (addStageIfNotExist) {
+                                lessonPlanHolder.addStageIfNotExists(entry.getMessage());
+                            }
 
-                        if (addStageIfNotExist) {
-                            lessonPlanHolder.addStageIfNotExists(entry.getMessage());
+                            lessonPlanHolder.setStageTimeByName(entry.getMessage(), time);
+
+                            if (addStageIfNotExist) {
+                                lessonPlanHolder.sortItemsByBgnTime();
+                            }
+
+                            lessonPlanHolder.recalcLabels();
                         }
 
-                        lessonPlanHolder.setStageTimeByName(entry.getMessage(), time);
-
-                        if (addStageIfNotExist) {
-                            lessonPlanHolder.sortItemsByBgnTime();
-                        }
-
-                        lessonPlanHolder.recalcLabels();
                         if (onLabelsUpdated != null) {
                             onLabelsUpdated.run();
                         }
                     },
                     (totalFrames, currentFrame, percent) -> {
-/*
-                        var canFinish = !addStageIfNotExist && lessonPlanHolder.allStagesHasTime();
-                        var progress = canFinish? 100: percent;
-                        updateProgress(progress, 100);
-                        updateMessage(String.format("%d%%", progress));
-                        return canFinish;
-*/
                         updateProgress(percent, 100);
                         updateMessage(String.format("%d%%", percent));
                         return false;
                     }
             );
         } catch (Exception e) {
+            log.error("Error during processing video file", e);
             if (onException != null) {
                 onException.accept(e);
             }

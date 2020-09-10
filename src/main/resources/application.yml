@@ -2,3 +2,8 @@ lessonplan:
   qr-code-size: 150
   degree-of-parallelism: 2
   ignore-qrcode-text-with-numbers-only: true
+
+logging:
+  level:
+    ru.otus.lessonplan: info
+  file.name: logs/logfile.txt

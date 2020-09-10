@@ -63,25 +63,33 @@ public class LessonPlanHolderImpl implements LessonPlanHolder {
 
     @Override
     public void addStageIfNotExists(String stageName) {
-        if (!lessonPlan.itemExists(stageName)){
-            lessonPlan.addItem(stageName);
+        synchronized (lessonPlan) {
+            if (!lessonPlan.itemExists(stageName)) {
+                lessonPlan.addItem(stageName);
+            }
         }
     }
 
     @Override
     public void deleteItem(int index) {
-        lessonPlan.deleteItem(index);
+        synchronized (lessonPlan) {
+            lessonPlan.deleteItem(index);
+        }
     }
 
     @Override
     public void sortItemsByBgnTime() {
-        lessonPlan.sortItemsByBgnTime();
+        synchronized (lessonPlan) {
+            lessonPlan.sortItemsByBgnTime();
+        }
     }
 
 
     @Override
     public void clear(boolean onlyTimes) {
-        lessonPlan.clear(onlyTimes);
+        synchronized (lessonPlan) {
+            lessonPlan.clear(onlyTimes);
+        }
     }
 
     @Override
