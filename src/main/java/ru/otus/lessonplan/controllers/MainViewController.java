@@ -20,6 +20,9 @@ public interface MainViewController {
     void saveLessonExecutionAsSrtMIOnAction(ActionEvent evt);
     void saveLessonExecutionForYoutubeMIOnAction(ActionEvent evt);
 
+    @FXML
+    void saveLessonExecutionForYoutubeWithBomMIOnAction(ActionEvent evt);
+
     void setCurrentCaptureAreaMIOnAction(ActionEvent evt) throws IOException;
     void deleteSelectedItemsMIOnAction(ActionEvent evt);
 

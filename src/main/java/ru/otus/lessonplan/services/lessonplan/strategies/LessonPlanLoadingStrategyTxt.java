@@ -23,7 +23,7 @@ public class LessonPlanLoadingStrategyTxt implements LessonPlanLoadingStrategy {
 
     @Override
     public SavingFormat getSupportedFormat() {
-        return SavingFormat.TXT;
+        return SavingFormat.UTF8_TXT;
     }
 
     @Override

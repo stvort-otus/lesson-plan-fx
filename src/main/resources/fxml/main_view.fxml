@@ -31,6 +31,7 @@
                         <MenuItem fx:id="saveLessonExecutionMI" disable="true" mnemonicParsing="false" onAction="#saveLessonExecutionMIOnAction" text="Сохранить ход занятия..." />
                         <MenuItem fx:id="saveLessonExecutionAsSrtMI" disable="true" mnemonicParsing="false" onAction="#saveLessonExecutionAsSrtMIOnAction" text="Сохранить ход занятия как srt..." />
                         <MenuItem fx:id="saveLessonExecutionForYoutubeMI" disable="true" mnemonicParsing="false" onAction="#saveLessonExecutionForYoutubeMIOnAction" text="Сохранить ход занятия для Youtube..." />
+                        <MenuItem fx:id="saveLessonExecutionForYoutubeWithBomMI" disable="true" mnemonicParsing="false" onAction="#saveLessonExecutionForYoutubeWithBomMIOnAction" text="Сохранить ход занятия для Youtube (с BOM)..." />
                     </items>
                 </Menu>
                 <Menu mnemonicParsing="false" text="Область захвата">

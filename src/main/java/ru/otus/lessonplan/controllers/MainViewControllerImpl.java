@@ -107,6 +107,7 @@ public class MainViewControllerImpl implements MainViewController {
     @FXML private MenuItem saveLessonExecutionMI;
     @FXML private MenuItem saveLessonExecutionAsSrtMI;
     @FXML private MenuItem saveLessonExecutionForYoutubeMI;
+    @FXML private MenuItem saveLessonExecutionForYoutubeWithBomMI;
 
     @FXML private MenuItem deleteSelectedItemsMI;
 
@@ -192,6 +193,7 @@ public class MainViewControllerImpl implements MainViewController {
         saveLessonExecutionMI.setDisable(!enabled);
         saveLessonExecutionAsSrtMI.setDisable(!enabled);
         saveLessonExecutionForYoutubeMI.setDisable(!enabled);
+        saveLessonExecutionForYoutubeWithBomMI.setDisable(!enabled);
         generateQRCodesMI.setDisable(!enabled);
         deleteSelectedItemsMI.setDisable(!enabled);
     }
@@ -225,7 +227,7 @@ public class MainViewControllerImpl implements MainViewController {
         fileChooser.showModal(primaryStage, false, "",
                 TXT_EXT, LOAD_PLAN_DIALOG_KEY, file -> {
                     try {
-                        lessonPlanHolder.loadLessonPlan(file, SavingFormat.TXT);
+                        lessonPlanHolder.loadLessonPlan(file, SavingFormat.UTF8_TXT);
                         lessonStartTimeLTF.setLocalTime(lessonPlanHolder.getLessonStartTime());
                     } catch (UnsupportedCharsetException e) {
                         executeWarningAlert(WARNING_CAPTION, WRONG_FILE_CHARSET_MSG + String.format(" (%s)", e.getCharsetName()));
@@ -293,7 +295,15 @@ public class MainViewControllerImpl implements MainViewController {
     public void saveLessonExecutionForYoutubeMIOnAction(ActionEvent evt) {
         var primaryStage = (Stage) rootVBox.getScene().getWindow();
         fileChooser.showModal(primaryStage, true, SAVE_FOR_YOUTUBE_DIALOG_INITIAL_FILE_NAME,
-                TXT_EXT, SAVE_FOR_YOUTUBE_DIALOG_KEY, f -> lessonPlanHolder.saveLessonPlan(f, SavingFormat.TXT));
+                TXT_EXT, SAVE_FOR_YOUTUBE_DIALOG_KEY, f -> lessonPlanHolder.saveLessonPlan(f, SavingFormat.UTF8_TXT));
+    }
+
+    @Override
+    @FXML
+    public void saveLessonExecutionForYoutubeWithBomMIOnAction(ActionEvent evt) {
+        var primaryStage = (Stage) rootVBox.getScene().getWindow();
+        fileChooser.showModal(primaryStage, true, SAVE_FOR_YOUTUBE_DIALOG_INITIAL_FILE_NAME,
+                TXT_EXT, SAVE_FOR_YOUTUBE_DIALOG_KEY, f -> lessonPlanHolder.saveLessonPlan(f, SavingFormat.UTF8_TXT_WIT_BOM));
     }
 
     @Override
