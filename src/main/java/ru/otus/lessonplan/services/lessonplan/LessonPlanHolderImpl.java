@@ -129,7 +129,7 @@ public class LessonPlanHolderImpl implements LessonPlanHolder {
     public void generateQRCodesByPlan(File targetDir, int size) {
         for (int i = 0; i < lessonPlan.getItemsCount(); i++) {
             var item = lessonPlan.getItems().get(i);
-            var fileName = correctFileName(String.format("%03d - %s%s", i + 1, item.getStageName(), ".bmp"));
+            var fileName = correctFileName(String.format("%03d - %s%s", i + 1, item.getStageName(), ".png"));
             var path = Paths.get(targetDir.getAbsolutePath(), fileName);
             qrCodeService.generateQRCodeImageFile(item.getStageName(), size, size, path.toAbsolutePath().toString());
         }

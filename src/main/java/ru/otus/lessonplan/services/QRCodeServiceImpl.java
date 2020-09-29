@@ -65,7 +65,7 @@ public class QRCodeServiceImpl implements QRCodeService {
     public void generateQRCodeImage(String text, int width, int height, OutputStream os) {
         var qrCodeWriter = new QRCodeWriter();
         var bitMatrix = qrCodeWriter.encode(text, QR_CODE, width, height, Map.of(EncodeHintType.CHARACTER_SET, "UTF-8"));
-        MatrixToImageWriter.writeToStream(bitMatrix, "BMP", os);
+        MatrixToImageWriter.writeToStream(bitMatrix, "PNG", os);
     }
 
     @Override
@@ -75,6 +75,6 @@ public class QRCodeServiceImpl implements QRCodeService {
         var bitMatrix = qrCodeWriter.encode(text, QR_CODE, width, height, Map.of(EncodeHintType.CHARACTER_SET, "UTF-8"));
 
         var path = FileSystems.getDefault().getPath(filePath);
-        MatrixToImageWriter.writeToPath(bitMatrix, "BMP", path);
+        MatrixToImageWriter.writeToPath(bitMatrix, "PNG", path);
     }
 }
