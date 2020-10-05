@@ -9,6 +9,7 @@ import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ConfigurableApplicationContext;
 import ru.otus.lessonplan.controllers.MainViewController;
 
@@ -36,7 +37,8 @@ public class LessonplanApplication extends Application {
 
     @Override
     public void init() {
-        springContext = SpringApplication.run(LessonplanApplication.class);
+        var rawParam = getParameters().getRaw().toArray(new String[0]);
+        springContext = SpringApplication.run(LessonplanApplication.class, rawParam);
         fxmlLoader = new FXMLLoader();
         fxmlLoader.setControllerFactory(springContext::getBean);
     }

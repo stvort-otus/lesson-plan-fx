@@ -48,6 +48,7 @@ module lessonplan.fx {
 
     opens ru.otus.lessonplan;
     opens ru.otus.lessonplan.fx;
+    opens ru.otus.lessonplan.config;
     opens ru.otus.lessonplan.controllers;
     opens ru.otus.lessonplan.model;
     opens ru.otus.lessonplan.services;

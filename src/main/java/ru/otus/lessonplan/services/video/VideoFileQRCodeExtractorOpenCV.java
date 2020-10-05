@@ -6,6 +6,7 @@ import org.bytedeco.javacv.FrameGrabber;
 import org.bytedeco.javacv.Java2DFrameConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import ru.otus.lessonplan.config.VideoFileQRCodeExtractorProps;
 import ru.otus.lessonplan.model.QRCodeEntry;
 import ru.otus.lessonplan.services.QRCodeService;
 import ru.otus.lessonplan.services.video.callbacks.QRCodeFoundCallback;
@@ -27,23 +28,21 @@ import java.util.stream.IntStream;
 @Slf4j
 @Service
 public class VideoFileQRCodeExtractorOpenCV implements VideoFileQRCodeExtractor {
-    private static final int GRAB_STEP = 48;
+    //private static final int GRAB_STEP = 48;
     private static final Pattern BAD_QR_CODE_TEXT_PATTERN =
             Pattern.compile("^(\\d|~|@|#|%|\\^|&|\\*|\\(|\\)|-|=|\\+|_|\\$|!|\"|:|;|,|\\.|<|>|\\?|\\|/|№|\\r|\\n)+$");
-
-    private final int degreeOfParallelism;
-    private final boolean ignoreQrCodeTextWithNumbersOnly;
+    private final VideoFileQRCodeExtractorProps props;
     private final FFmpegFrameGrabberFactory grabberFactory;
     private final QRCodeService qrCodeService;
 
     public VideoFileQRCodeExtractorOpenCV(
-            @Value("${lessonplan.degree-of-parallelism:1}") int degreeOfParallelism,
-            @Value("${lessonplan.ignore-qrcode-text-with-numbers-only:false}") boolean ignoreQrCodeTextWithNumbersOnly,
+            VideoFileQRCodeExtractorProps props,
             FFmpegFrameGrabberFactory grabberFactory,
             QRCodeService qrCodeService) {
 
-        this.degreeOfParallelism = degreeOfParallelism;
-        this.ignoreQrCodeTextWithNumbersOnly = ignoreQrCodeTextWithNumbersOnly;
+        log.info("PROPS: {}", props);
+
+        this.props = props;
         this.grabberFactory = grabberFactory;
         this.qrCodeService = qrCodeService;
     }
@@ -56,9 +55,11 @@ public class VideoFileQRCodeExtractorOpenCV implements VideoFileQRCodeExtractor 
         var t = System.currentTimeMillis();
 
         var exceptions = Collections.synchronizedList(new ArrayList<Exception>());
-        var latch = new CountDownLatch(degreeOfParallelism);
+        //var latch = new CountDownLatch(degreeOfParallelism);
+        var latch = new CountDownLatch(props.getDegreeOfParallelism());
         try {
-            var pool = Executors.newFixedThreadPool(degreeOfParallelism);
+            //var pool = Executors.newFixedThreadPool(degreeOfParallelism);
+            var pool = Executors.newFixedThreadPool(props.getDegreeOfParallelism());
 
             HashMap<String, Integer> progressMap = new HashMap<>();
             VideoFileProgressCallback progressCallback = prepareVideoFileProgressCallback(progressMap, onVideoFileProgress);
@@ -90,7 +91,7 @@ public class VideoFileQRCodeExtractorOpenCV implements VideoFileQRCodeExtractor 
                                                                        VideoFileProgressCallback parentCallback){
         return (totalFrames, currentFrame, percent) -> {
             synchronized (progressMap) {
-                log.info("Thread process percent {} = {} ", Thread.currentThread().getName(), percent);
+                log.debug("Thread process percent {} = {} ", Thread.currentThread().getName(), percent);
                 progressMap.put(Thread.currentThread().getName(), percent);
                 int sum = progressMap.values().stream().mapToInt(Integer::intValue).sum();
                 if (parentCallback != null) {
@@ -103,7 +104,7 @@ public class VideoFileQRCodeExtractorOpenCV implements VideoFileQRCodeExtractor 
 
     private void submitVideoFilePartsProcessing(ExecutorService pool, String fileName, QRCodeFoundCallback onQRCodeFound,
                                                 VideoFileProgressCallback progressCallback, CountDownLatch latch, List<Exception> exceptions){
-        IntStream.range(1, degreeOfParallelism + 1)
+        IntStream.range(1, props.getDegreeOfParallelism() + 1)
                 .forEachOrdered(i -> pool.submit(() -> processPartOfVideoFile(fileName, i, onQRCodeFound, progressCallback, latch, exceptions)));
     }
 
@@ -118,7 +119,7 @@ public class VideoFileQRCodeExtractorOpenCV implements VideoFileQRCodeExtractor 
 
     private boolean checkQRCodeMessage(String qrCodeMessage) {
         var res = !"".equals(qrCodeMessage);
-        if (res && ignoreQrCodeTextWithNumbersOnly) {
+        if (res && props.isIgnoreQrCodeTextWithNumbersOnly()) {
             return !BAD_QR_CODE_TEXT_PATTERN.matcher(qrCodeMessage).matches();
         }
         return res;
@@ -148,16 +149,16 @@ public class VideoFileQRCodeExtractorOpenCV implements VideoFileQRCodeExtractor 
         switchGrabber(frameGrabber, false);
         try {
             var lengthInFrames = frameGrabber.getLengthInFrames();
-            var partSize = lengthInFrames / degreeOfParallelism;
+            var partSize = lengthInFrames / props.getDegreeOfParallelism();
             var from = (partNum - 1) * partSize;
             var to = from + partSize;
             log.info("Start processing part of video file. Part num: {}/{}, frames in part: {}/{}, frame interval: {}-{}",
-                    partNum, degreeOfParallelism, partSize, lengthInFrames, from, to);
+                    partNum, props.getDegreeOfParallelism(), partSize, lengthInFrames, from, to);
 
             frameGrabber.setFrameNumber(from);
             for (int i = from; i < to; i++) {
 
-                if (i % GRAB_STEP == 0) {
+                if (i % props.getGrabStepFrames() == 0) {
                     var frame = frameGrabber.grabImage();
                     var image = converter.convert(frame);
                     var qrCodeMessage = qrCodeService.readBarCode(image);

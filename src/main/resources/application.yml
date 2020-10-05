@@ -1,7 +1,9 @@
 lessonplan:
   qr-code-size: 150
-  degree-of-parallelism: 2
-  ignore-qrcode-text-with-numbers-only: true
+  video-file-qr-code-extractor:
+    grab-step-frames: ${grab.step.frames:24}
+    degree-of-parallelism: 2
+    ignore-qrcode-text-with-numbers-only: true
 
 logging:
   level:
