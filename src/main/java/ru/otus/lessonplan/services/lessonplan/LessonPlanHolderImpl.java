@@ -1,5 +1,6 @@
 package ru.otus.lessonplan.services.lessonplan;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.otus.lessonplan.model.LessonPlan;
 import ru.otus.lessonplan.model.LessonPlanItem;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 import static ru.otus.lessonplan.utils.FilesUtils.correctFileName;
 
+@Slf4j
 @Service
 public class LessonPlanHolderImpl implements LessonPlanHolder {
 
@@ -127,11 +129,15 @@ public class LessonPlanHolderImpl implements LessonPlanHolder {
 
     @Override
     public void generateQRCodesByPlan(File targetDir, int size) {
-        for (int i = 0; i < lessonPlan.getItemsCount(); i++) {
-            var item = lessonPlan.getItems().get(i);
-            var fileName = correctFileName(String.format("%03d - %s%s", i + 1, item.getStageName(), ".png"));
-            var path = Paths.get(targetDir.getAbsolutePath(), fileName);
-            qrCodeService.generateQRCodeImageFile(item.getStageName(), size, size, path.toAbsolutePath().toString());
+        try {
+            for (int i = 0; i < lessonPlan.getItemsCount(); i++) {
+                var item = lessonPlan.getItems().get(i);
+                var fileName = correctFileName(String.format("%03d - %s%s", i + 1, item.getStageName(), ".png"));
+                var path = Paths.get(targetDir.getAbsolutePath(), fileName);
+                qrCodeService.generateQRCodeImageFile(item.getStageName(), size, size, path.toAbsolutePath().toString());
+            }
+        } catch (Exception e) {
+            log.error("Error during generation of qr-codes files", e);
         }
     }
 

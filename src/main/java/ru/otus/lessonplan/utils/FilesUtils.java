@@ -4,20 +4,14 @@ import java.io.File;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.CodeSource;
 
 public final class FilesUtils {
     private FilesUtils() {
     }
 
     public static String correctFileName(String fileName) {
-        return fileName.replace("/", "_").replace("\\", "_")
-                .replace("<", "_").replace(">", "_")
-                .replace("|", "_").replace("*", "_")
-                .replace("\"", "_").replace(":", "_")
-                .replace("?", "_").replace("=", "_");
+        return fileName.replaceAll( "[\u0000-\u001f<>:\"/\\\\|?*=\u007f]+", "_" ).trim();
     }
 
     public static String getJarFolder() throws Exception {
